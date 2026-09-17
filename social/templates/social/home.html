@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SocialConnect</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 18px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h2 {
+            margin: 0;
+        }
+
+        header a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .welcome {
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        }
+
+        textarea,
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button,
+        .btn {
+            border: none;
+            background: #111827;
+            color: white;
+            padding: 11px 18px;
+            border-radius: 7px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .username {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .username a {
+            color: #111827;
+            text-decoration: none;
+        }
+
+        .date {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .post-content {
+            font-size: 17px;
+            line-height: 1.6;
+            margin: 20px 0;
+        }
+
+        .post-image {
+            width: 100%;
+            max-height: 450px;
+            object-fit: contain;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .comment {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+
+        .comment strong {
+            margin-right: 5px;
+        }
+
+        .message {
+            padding: 12px;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .login-note {
+            color: #6b7280;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h2>🌐 SocialConnect</h2>
+
+    <div>
+        {% if user.is_authenticated %}
+            <a href="{% url 'profile' user.username %}">Profile</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'register' %}">Register</a>
+        {% endif %}
+    </div>
+</header>
+
+<div class="container">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% if user.is_authenticated %}
+
+        <div class="welcome">
+            <h1>Welcome, {{ user.username }} 👋</h1>
+            <p>Share your thoughts with the community.</p>
+        </div>
+
+        <div class="card">
+            <h2>📝 Create a Post</h2>
+
+            <form method="POST" action="{% url 'create_post' %}">
+                {% csrf_token %}
+
+                <textarea
+                    name="content"
+                    placeholder="What's on your mind?"
+                    required
+                ></textarea>
+
+                <input
+                    type="url"
+                    name="image"
+                    placeholder="Image URL (optional)"
+                >
+
+                <button type="submit">Publish Post</button>
+            </form>
+        </div>
+
+    {% else %}
+
+        <div class="card">
+            <h1>Welcome to SocialConnect 🌐</h1>
+            <p>Connect with people, share posts, comment and follow users.</p>
+
+            <a href="{% url 'login' %}" class="btn">Login</a>
+            <a href="{% url 'register' %}" class="btn">Create Account</a>
+        </div>
+
+    {% endif %}
+
+
+    {% for post in posts %}
+
+        <div class="card">
+
+            <div class="post-header">
+                <div>
+                    <div class="username">
+                        <a href="{% url 'profile' post.user.username %}">
+                            @{{ post.user.username }}
+                        </a>
+                    </div>
+
+                    <div class="date">
+                        {{ post.created_at|date:"d M Y, h:i A" }}
+                    </div>
+                </div>
+
+                {% if user == post.user %}
+                    <a
+                        href="{% url 'delete_post' post.id %}"
+                        class="btn btn-danger"
+                    >
+                        Delete
+                    </a>
+                {% endif %}
+            </div>
+
+
+            <div class="post-content">
+                {{ post.content|linebreaksbr }}
+            </div>
+
+
+            {% if post.image %}
+                <img
+                    src="{{ post.image }}"
+                    alt="Post image"
+                    class="post-image"
+                >
+            {% endif %}
+
+
+            {% if user.is_authenticated %}
+
+                <div class="actions">
+
+                    <a
+                        href="{% url 'toggle_like' post.id %}"
+                        class="btn"
+                    >
+                        ❤️ Like
+                    </a>
+
+                    <span>
+                        {{ post.likes.count }} Like{{ post.likes.count|pluralize }}
+                    </span>
+
+                </div>
+
+
+                <form method="POST" action="{% url 'add_comment' post.id %}">
+                    {% csrf_token %}
+
+                    <input
+                        type="text"
+                        name="content"
+                        placeholder="Write a comment..."
+                        required
+                    >
+
+                    <button type="submit">Comment</button>
+                </form>
+
+            {% else %}
+
+                <p class="login-note">
+                    Login to like and comment on posts.
+                </p>
+
+            {% endif %}
+
+
+            {% if post.comments.all %}
+
+                <h3>💬 Comments</h3>
+
+                {% for comment in post.comments.all %}
+
+                    <div class="comment">
+                        <strong>
+                            @{{ comment.user.username }}
+                        </strong>
+
+                        {{ comment.content }}
+
+                        <div class="date">
+                            {{ comment.created_at|date:"d M Y, h:i A" }}
+                        </div>
+                    </div>
+
+                {% empty %}
+
+                    <p>No comments yet.</p>
+
+                {% endfor %}
+
+            {% endif %}
+
+        </div>
+
+    {% empty %}
+
+        <div class="card">
+            <h2>No posts yet.</h2>
+            <p>Be the first person to create a post!</p>
+        </div>
+
+    {% endfor %}
+
+</div>
+
+<footer>
+    © 2026 SocialConnect | CodeAlpha Task 2
+</footer>
+
+</body>
+</html>
